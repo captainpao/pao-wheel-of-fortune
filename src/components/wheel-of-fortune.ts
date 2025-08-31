@@ -161,29 +161,11 @@ export class WheelOfFortune extends LitElement {
     this.isSpinning = true;
     this.winnerText = 'Spinning...';
     
-    // Calculate the target stopping position
-    const anglePerSegment = (2 * Math.PI) / this.names.length;
-    const randomWinnerIndex = Math.floor(Math.random() * this.names.length);
-    
-    // The wheel is drawn with the first segment starting at 12 o'clock (π/2)
-    // We want the winning segment to be at the top position (12 o'clock)
-    // The segment at index i starts at: i * anglePerSegment + π/2
-    // We want this segment to be at the top, so we need to rotate the wheel
-    // so that the start of the segment aligns with π/2
-    const targetSegmentStart = randomWinnerIndex * anglePerSegment + Math.PI/2;
-    let targetRotation = Math.PI/2 - targetSegmentStart;
-    
-    // Normalize the target rotation to ensure we spin forward
-    while (targetRotation <= this.currentRotation) {
-      targetRotation += 2 * Math.PI;
-    }
-    
-    // Add multiple full rotations for dramatic effect (5-8 additional full rotations)
-    const extraSpins = (Math.random() * 3 + 5) * 2 * Math.PI;
-    const finalRotation = targetRotation + extraSpins;
-    
-    // The winner is the pre-selected name, ensuring consistency
-    const winner = this.names[randomWinnerIndex];
+    // Generate a random final rotation (between 5-8 full spins plus a random portion)
+    const minSpins = 5;
+    const maxSpins = 8;
+    const spins = Math.random() * (maxSpins - minSpins) + minSpins;
+    const finalRotation = this.currentRotation + (spins * 2 * Math.PI) + Math.random() * 2 * Math.PI;
     
     const duration = 3000; // 3 seconds
     const startTime = Date.now();
@@ -205,7 +187,17 @@ export class WheelOfFortune extends LitElement {
       } else {
         this.isSpinning = false;
         
-        // The winner was already determined before spinning
+        // Determine the winner based on which segment is at 12 o'clock
+        const anglePerSegment = (2 * Math.PI) / this.names.length;
+        // Normalize the final rotation to be between 0 and 2π
+        const normalizedRotation = this.currentRotation % (2 * Math.PI);
+        // 3π/2 is 12 o'clock position (270 degrees)
+        // We add 2π and use modulo to handle negative rotations
+        const winningIndex = Math.floor(
+          (((3 * Math.PI/2) - normalizedRotation + (2 * Math.PI)) % (2 * Math.PI)) / anglePerSegment
+        ) % this.names.length;
+        
+        const winner = this.names[winningIndex];
         this.winnerText = `🎉 Winner: ${winner}! 🎉`;
       }
     };
