@@ -1,19 +1,17 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  build: {
-    lib: {
-      entry: './src/main.ts',
-      formats: ['es'],
-      fileName: 'main'
-    },
-    rollupOptions: {
-      external: /^lit/
-    }
-  },
   resolve: {
     alias: {
       '@': '/src'
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: '/index.html'
+      }
+    }
+  },
+  base: '/' // Change this to '/wheel-of-fortune/' if deploying to a subdirectory
 })
