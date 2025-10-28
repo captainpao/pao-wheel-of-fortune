@@ -25,20 +25,30 @@ export class WheelOfFortune extends LitElement {
 
   private canvas!: HTMLCanvasElement;
 
-  private _names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
+  private _names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Casey', 'Michael', 'Roger', 'Rafael', 'Jacky', 'Gabriel'];
   private _currentRotation = 0;
   private _isSpinning = false;
-  private _winnerText = 'Spin to Win!';
-  private _namesInput = 'Alice\nBob\nCharlie\nDiana\nEve\nFrank\nGrace\nHenry';
+  private _winnerText = 'The Spintastic Wheel!';
+  private _namesInput = this._names.join('\n');
 
-  private colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2',
-    '#A3E4D7', '#F9E79F', '#FADBD8', '#D5DBDB', '#AED6F1',
-    '#A9DFBF', '#F4D03F', '#E8DAEF', '#A2D9CE', '#FCBDBD',
-    '#D6EAF8', '#D5F4E6', '#FEF9E7', '#EBDEF0', '#EAEDED'
-  ];
+  private generateRainbowColors(count: number): string[] {
+    const colors: string[] = [];
+    const hueStep = 360 / count; // Distribute hues evenly around the color wheel
+
+    for (let i = 0; i < count; i++) {
+      const hue = (i * hueStep) % 360;
+      const saturation = 85; // High saturation for vibrant colors
+      const lightness = 60; // Medium lightness for good visibility
+
+      colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+    }
+
+    return colors;
+  }
+
+  private get colors(): string[] {
+    return this.generateRainbowColors(this.names.length);
+  }
 
   get names() { return this._names; }
   set names(value: string[]) { 
@@ -145,8 +155,16 @@ export class WheelOfFortune extends LitElement {
       this.ctx.closePath();
       this.ctx.fillStyle = this.colors[i % this.colors.length];
       this.ctx.fill();
-      this.ctx.strokeStyle = '#fff';
-      this.ctx.lineWidth = 2;
+
+      // Draw hairline border between segments
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.centerX, this.centerY);
+      this.ctx.lineTo(
+        this.centerX + Math.cos(endAngle) * this.radius,
+        this.centerY + Math.sin(endAngle) * this.radius
+      );
+      this.ctx.strokeStyle = 'ingigo';
+      this.ctx.lineWidth = 1;
       this.ctx.stroke();
       
       this.ctx.save();
@@ -154,7 +172,7 @@ export class WheelOfFortune extends LitElement {
       this.ctx.rotate(startAngle + anglePerSegment / 2);
       
       this.ctx.fillStyle = '#fff';
-      this.ctx.font = 'bold 14px Arial';
+      this.ctx.font = 'bold 14px Arial, sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       
@@ -162,11 +180,12 @@ export class WheelOfFortune extends LitElement {
       let fontSize = 14;
       const textRadius = this.radius * 0.75;
       const maxTextWidth = this.radius * 0.3;
-      
-      this.ctx.font = `bold ${fontSize}px Arial`;
+
+      // Security: Ensure font is safe and text is properly rendered
+      this.ctx.font = `bold ${fontSize}px Arial, sans-serif`;
       while (this.ctx.measureText(text).width > maxTextWidth && fontSize > 8) {
         fontSize--;
-        this.ctx.font = `bold ${fontSize}px Arial`;
+        this.ctx.font = `bold ${fontSize}px Arial, sans-serif`;
       }
       
       this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -182,6 +201,13 @@ export class WheelOfFortune extends LitElement {
     this.ctx.arc(this.centerX, this.centerY, 20, 0, 2 * Math.PI);
     this.ctx.fillStyle = '#333';
     this.ctx.fill();
+
+    // Draw outer border around the wheel
+    this.ctx.beginPath();
+    this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+    this.ctx.strokeStyle = 'indigo';
+    this.ctx.lineWidth = 5;
+    this.ctx.stroke();
   }
 
   private celebrateWinner() {
@@ -256,7 +282,7 @@ export class WheelOfFortune extends LitElement {
         ) % this.names.length;
         
         const winner = this.names[winningIndex];
-        this.winnerText = `🎉 Congratulations ${winner}! 🎉`;
+        this.winnerText = `🎉 ${winner}! 🎉`;
         this.celebrateWinner();
       }
     };
@@ -267,27 +293,63 @@ export class WheelOfFortune extends LitElement {
   private updateNames() {
     const inputText = this.namesInput.trim();
     const newNames = inputText.split('\n')
-      .map(name => name.trim())
+      .map(name => this.sanitizeName(name.trim()))
       .filter(name => name.length > 0);
-    
+
     if (newNames.length < 2) {
-      alert('Please enter at least 2 names.');
+      this.showError('Please enter at least 2 names.');
       return;
     }
-    
+
     if (newNames.length > 30) {
-      alert('Maximum 30 names allowed. Extra names will be ignored.');
+      this.showWarning('Maximum 30 names allowed. Extra names will be ignored.');
       this.names = newNames.slice(0, 30);
     } else {
       this.names = newNames;
     }
-    
+
     this.currentRotation = 0;
     this.winnerText = 'Spin to Win!';
     this.drawWheel();
-    
+
     this.namesInput = this.names.join('\n');
     this.requestUpdate();
+  }
+
+  private sanitizeName(name: string): string {
+    // Remove potentially dangerous characters and limit length
+    return name
+      .replace(/[<>"'&]/g, '') // Remove HTML/XML special characters
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
+      .substring(0, 50); // Limit name length
+  }
+
+  private showError(message: string) {
+    // Use a custom notification system instead of alert()
+    this.winnerText = `Error: ${message}`;
+    this.requestUpdate();
+
+    // Clear error message after 3 seconds
+    setTimeout(() => {
+      if (this.winnerText.startsWith('Error:')) {
+        this.winnerText = 'Spin to Win!';
+        this.requestUpdate();
+      }
+    }, 3000);
+  }
+
+  private showWarning(message: string) {
+    // Use a custom notification system instead of alert()
+    this.winnerText = `Note: ${message}`;
+    this.requestUpdate();
+
+    // Clear warning message after 3 seconds
+    setTimeout(() => {
+      if (this.winnerText.startsWith('Note:')) {
+        this.winnerText = 'Spin to Win!';
+        this.requestUpdate();
+      }
+    }, 3000);
   }
 
   private handleNamesInput(e: Event) {
@@ -297,14 +359,14 @@ export class WheelOfFortune extends LitElement {
 
   render() {
     return html`
-      <div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-600 to-purple-800 p-5">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          <div class="flex flex-col items-center bg-white p-4 sm:p-8 rounded-2xl shadow-2xl">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center min-h-[60px] flex items-center">
+      <div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-600 to-purple-800 p-3">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[60%_40%] items-start">
+          <div class="flex flex-col items-center mb-3">
+            <h1 class="text-3xl font-bungee text-transparent bg-clip-text bg-gradient-to-br from-[#fff200] via-[#ffe600] to-[#d57e05] drop-shadow-[0_2px_0_rgba(0,0,0,0.25)] text-center tracking-wide p-3">
               ${this.winnerText}
             </h1>
             
-            <div class="relative mb-2 w-full flex justify-center">
+            <div class="relative w-full flex justify-center">
               <canvas 
                 id="wheel" 
                 class="block"
@@ -312,7 +374,7 @@ export class WheelOfFortune extends LitElement {
               <div 
                 class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-[0%] text-3xl sm:text-4xl z-10"
                 style="
-                  background: linear-gradient(135deg, #FF6B6B, #6C63FF);
+                  background: linear-gradient(135deg, #fff200, #d57e05);
                   -webkit-background-clip: text;
                   background-clip: text;
                   color: transparent;
@@ -325,9 +387,10 @@ export class WheelOfFortune extends LitElement {
             <button 
               @click="${this.spin}"
               ?disabled="${this.isSpinning}"
-              class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
+              style="min-width: 200px"
+              class="bg-gradient-to-r from-[#fff200] via-[#ffe600] to-[#d57e05] hover:from-[#e8dd00] hover:to-[#bd6f01] 
                      disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed
-                     text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg 
+                     font-bold py-4 px-8 rounded-full text-xl shadow-lg 
                      transform transition-all duration-200 hover:scale-105 hover:-translate-y-1
                      disabled:transform-none disabled:shadow-none"
             >
@@ -335,7 +398,7 @@ export class WheelOfFortune extends LitElement {
             </button>
           </div>
           
-          <div class="bg-white p-8 rounded-2xl shadow-2xl">
+          <div class="bg-white p-6 rounded-2xl shadow-2xl">
             <h4 class="text-1xl font-bold text-gray-800 mb-2">Participants</h4>
             
             <textarea
@@ -348,7 +411,7 @@ export class WheelOfFortune extends LitElement {
             
             <button
               @click="${this.updateNames}"
-              class="w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 
+              class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 
                      hover:from-indigo-600 hover:to-purple-700 text-white font-semibold 
                      py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
             >

@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        bungee: ['"Bungee"', 'cursive'],
         sans: ['Roboto', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
       },
     },
