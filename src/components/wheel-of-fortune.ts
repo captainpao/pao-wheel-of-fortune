@@ -388,8 +388,8 @@ export class WheelOfFortune extends LitElement {
               @click="${this.spin}"
               ?disabled="${this.isSpinning}"
               style="min-width: 200px"
-              class="bg-gradient-to-r from-[#fff200] via-[#ffe600] to-[#d57e05] hover:from-[#e8dd00] hover:to-[#bd6f01] 
-                     disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed
+              class="bg-gradient-to-t from-[#f59e0b] to-[#fcd34d] hover:from-[#dc8e06] hover:to-[#f1c124] 
+                     disabled:from-[#dc8e06] disabled:to-[#f1c124] disabled:cursor-not-allowed
                      font-bold py-4 px-8 rounded-full text-xl shadow-lg 
                      transform transition-all duration-200 hover:scale-105 hover:-translate-y-1
                      disabled:transform-none disabled:shadow-none"
