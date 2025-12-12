@@ -360,11 +360,11 @@ export class WheelOfFortune extends LitElement {
   render() {
     return html`
       <div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-600 to-purple-800 p-3">
+        <h1 class="text-5xl font-bungee text-transparent bg-clip-text bg-gradient-to-br from-[#fff200] via-[#ffe600] to-[#d57e05] drop-shadow-[0_2px_0_rgba(0,0,0,0.25)] text-center tracking-wide p-3 mb-3">
+          ${this.winnerText}
+        </h1>
         <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[60%_40%] items-start">
           <div class="flex flex-col items-center mb-3">
-            <h1 class="text-3xl font-bungee text-transparent bg-clip-text bg-gradient-to-br from-[#fff200] via-[#ffe600] to-[#d57e05] drop-shadow-[0_2px_0_rgba(0,0,0,0.25)] text-center tracking-wide p-3">
-              ${this.winnerText}
-            </h1>
             
             <div class="relative w-full flex justify-center">
               <canvas 
